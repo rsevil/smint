@@ -27,30 +27,38 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 			menuHeight = $smint.height(),
 			curi = 0,
 			stickyTop = $smint.offset().top;
-
+			
 		var stickyMenu = function(scrollingDown) {
 			// current distance top
 			var scrollTop = $(window).scrollTop();
-
-			// if we scroll more than the navigation, change its position to fixed and add class 'fxd', otherwise change it back to absolute and remove the class
+			var css = {};
+			// if we scroll more than the navigation, change its position to fixed and add class 'fxd', 
+			// otherwise change it back to absolute and remove the class
 			if (scrollTop > stickyTop) {
 				//Check if he has scrolled horizontally also.
 				if ($(window).scrollLeft()) {
-					$smint.css({ 'position': 'fixed', 'top': 0, 'left': -$(window).scrollLeft() }).addClass('fxd');
+					css = { 'position': 'fixed', 'top': 0, 'left': -$(window).scrollLeft() };
 				}
 				else {
-					$smint.css({ 'position': 'fixed', 'top': 0, 'left': 'auto' }).addClass('fxd');
+					css = { 'position': 'fixed', 'top': 0, 'left': 'auto' };
 				}
 			}
 			else {
-				$smint.css({ 'position': 'absolute', 'top': stickyTop, 'left': 'auto' }).removeClass('fxd');
+				css = { 'position': 'absolute', 'top': stickyTop, 'left': 'auto' };
+			}
+			
+			$smint.css(css);
+			if (scrollTop > stickyTop){
+				$smint.addClass(settings.menuStikyClass);
+			}else{
+				$smint.removeClass(settings.menuStikyClass);
 			}
 
 			if (!scrollingDown) {
 				while (true) {
 					if (scrollTop >= optionLocs[curi].top) {
-						$smintItems.removeClass('active');
-						$('#' + optionLocs[curi].id).addClass('active');
+						$smintItems.removeClass(settings.menuActiveItemClass);
+						optionLocs[curi].$item.addClass(settings.menuActiveItemClass);
 						// The foll. makes the page very slow.
 						/*if(optionLocs[curi].hash != null && optionLocs[curi].hash != lastHash) {
 							window.location.hash = optionLocs[curi].hash;
@@ -64,29 +72,18 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 			else {
 				while (true) {
 					if (scrollTop < optionLocs[curi].bottom) {
-						$smintItems.removeClass('active');
-						$('#' + optionLocs[curi].id).addClass('active');
-						// The foll. makes the page very slow.
-						/*if(optionLocs[curi].hash != null && optionLocs[curi].hash != lastHash) {
-							window.location.hash = optionLocs[curi].hash;
-							lastHash = optionLocs[curi].hash;
-						}*/
+						$smintItems.removeClass(settings.menuActiveItemClass);
+						optionLocs[curi].$item.addClass(settings.menuActiveItemClass);
 						break;
 					}
 					curi++;
-					//Added as failsafe, should not be needed.
-					/*
-					if(curi > optionLocs.length) {
-						break;
-					}
-					*/
 				}
 			}
 		};
 
 		// run function every time you scroll but not needed to be run for each of the $smintItems
 		$(window).scroll(function() {
-			//Get the direction of scroll
+			//Get the direction of scroll	
 			var st = $(this).scrollTop(),
 				scrollingDown = (st > lastScrollTop);
 			lastScrollTop = st;
@@ -95,58 +92,81 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 			// Check if at bottom of page, if so, add class to last <a> as sometimes the last div
 			// isnt long enough to scroll to the top of the page and trigger the active state.
 			if ($(window).scrollTop() + $(window).height() == $(document).height()) {
-				$smintItems.removeClass('active');
-				$smintItems.last().addClass('active');
+				$smintItems.removeClass(settings.menuActiveItemClass);
+				$smintItems.last().addClass(settings.menuActiveItemClass);
+			}
+		}).on('hashchange', function(e){
+			e.preventDefault();
+			if((window.location.hash) && (window.location.hash != "#")) {
+				// Scroll instantly to the set hash adding the height of the menu
+				$(this).scrollTop($(window.location.hash).position().top - menuHeight);
 			}
 		});
 
-		$smintItems.first().addClass('active');
+		$smintItems.first().addClass(settings.menuActiveItemClass);
 
 		// This function assumes that the elements are already in a sorted manner.
 		$smintItems.each(function() {
+			var $this = $(this);
+			
 			// No need to even add to optionLocs
-			if ($(this).hasClass("smint-disableAll")) {
+			if ($(this).is(settings.ignoreAllItemsSelector)) {
 				return;
 			}
+			
 			//Fill the menu
-			var id = this.id,
-				matchingSection = $("."+id),
+			var href = $this.attr("href");
+			
+			var id = href,
+				matchingSection = $(id),
 				sectionTop = matchingSection.position().top,
 				hash = null;
-			if($(this).attr("href").indexOf('#') >= 0) {
-				hash = $(this).attr("href").substr($(this).attr("href").indexOf('#') + 1);
+				
+			if(href.indexOf('#') >= 0) {
+				hash = href.substr(href.indexOf('#') + 1);
 			}
+			
 			optionLocs.push({
 				top: sectionTop - menuHeight,
-				bottom: parseInt(matchingSection.height() * 0.9) + sectionTop - menuHeight, //Added so that if he is scrolling down and has reached 90% of the section.
-				id: id,
+				bottom: parseInt(matchingSection.height()) + sectionTop - menuHeight, //Added so that if he is scrolling down and has reached 90% of the section.
+				$item: $this,
 				hash: hash
 			});
 
 			// if the link has the smint-disable class it will be ignored 
 			// Courtesy of mcpacosy(@mcpacosy)
 			// No need to add listener if this is the case.
-			if ($(this).hasClass("smint-disable")) {
+			if ($(this).is(settings.ignoreItemsSelector)) {
 				return;
 			}
 
-			$(this).on('click', function(e) {
+			$(this).click(function(e) {
 				// stops empty hrefs making the page jump when clicked
 				// Added after the check of smint-disableAll so that if its an external href it will work.
-				//e.preventDefault();
-				
+				e.preventDefault();
+				if ($(this).is('.' + settings.menuActiveItemClass)){
+					return;
+				}
 				// Scroll the page to the desired position!
 				$("html, body").animate({ scrollTop: sectionTop - menuHeight}, settings.scrollSpeed);
 			})
 		});
 
-		if( (window.location.hash) && (window.location.hash != "#") ) {
+		if((window.location.hash) && (window.location.hash != "#")) {
 			// Scroll to the set hash.
-			$('a[href=' + window.location.hash + ']').trigger('click');
+			$smintItems
+				.filter('a[href=' + window.location.hash + ']')
+				.click();
 		}
 		
 	}
 
-	$.fn.smint.defaults = { 'scrollSpeed': 500};
+	$.fn.smint.defaults = { 
+		scrollSpeed: 500,
+		ignoreItemsSelector: '.smint-disable',
+		ignoreAllItemsSelector: '.smint-disableAll',
+		menuActiveItemClass: 'active',
+		menuStikyClass: 'fxd'
+	};
 
 })(jQuery);

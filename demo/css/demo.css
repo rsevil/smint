@@ -132,7 +132,7 @@ p {
 }
 
 /* SECTIONS */
-.sTop {
+#sTop {
 	min-height: 630px;
 	background:#e5e5e5;
 	color:#3d3d3d;
@@ -141,31 +141,31 @@ p {
 
 
 
-.s1 {
+#s1 {
 	min-height: 500px;
 	background: #2e2e2e;
 }
 
 
-.s2 {
+#s2 {
 	min-height: 500px;
 	background: #3f3f3f;
 }
 
 
-.s3 {
+#s3 {
 	min-height: 500px;
 	background: #504f4f;
 }
 
 
-.s4 {
+#s4 {
 	min-height: 500px;
 	background: #6e87a1;
 	color: white;
 }
 
-.s5 {
+#s5 {
 	min-height: 500px;
 	background: #293b4d;
 	color: white;
