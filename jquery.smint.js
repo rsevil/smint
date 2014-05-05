@@ -26,7 +26,8 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 			lastHash = '',
 			menuHeight = $smint.height(),
 			curi = 0,
-			stickyTop = $smint.offset().top;
+			stickyTop = $smint.offset().top,
+			$smintSections = $();
 			
 		var stickyMenu = function(scrollingDown) {
 			// current distance top
@@ -58,12 +59,10 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 				while (true) {
 					if (scrollTop >= optionLocs[curi].top) {
 						$smintItems.removeClass(settings.menuActiveItemClass);
+						$smintSections.removeClass(settings.sectionActiveClass);
+						
 						optionLocs[curi].$item.addClass(settings.menuActiveItemClass);
-						// The foll. makes the page very slow.
-						/*if(optionLocs[curi].hash != null && optionLocs[curi].hash != lastHash) {
-							window.location.hash = optionLocs[curi].hash;
-							lastHash = optionLocs[curi].hash;
-						}*/
+						$(optionLocs[curi].$item.attr('href')).addClass(settings.sectionActiveClass);
 						break;
 					}
 					curi--;
@@ -73,7 +72,10 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 				while (true) {
 					if (scrollTop < optionLocs[curi].bottom) {
 						$smintItems.removeClass(settings.menuActiveItemClass);
+						$smintSections.removeClass(settings.sectionActiveClass);
+						
 						optionLocs[curi].$item.addClass(settings.menuActiveItemClass);
+						$(optionLocs[curi].$item.attr('href')).addClass(settings.sectionActiveClass);
 						break;
 					}
 					curi++;
@@ -139,6 +141,8 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 			if ($(this).is(settings.ignoreItemsSelector)) {
 				return;
 			}
+			
+			$smintSections = $smintSections.add($(this).attr('href'));
 
 			$(this).click(function(e) {
 				// stops empty hrefs making the page jump when clicked
@@ -149,7 +153,7 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 				}
 				// Scroll the page to the desired position!
 				$("html, body").animate({ scrollTop: sectionTop - menuHeight}, settings.scrollSpeed);
-			})
+			});
 		});
 
 		if((window.location.hash) && (window.location.hash != "#")) {
@@ -166,6 +170,7 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 		ignoreItemsSelector: '.smint-disable',
 		ignoreAllItemsSelector: '.smint-disableAll',
 		menuActiveItemClass: 'active',
+		sectionActiveClass: 'active',
 		menuStikyClass: 'fxd'
 	};
 
