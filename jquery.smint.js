@@ -17,13 +17,12 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 	$.fn.smint = function( options ) {
 
 		var $smint = this,
-			$smintItems = $smint.find('a'),
 			$window = $(window),
 			settings = $.extend({}, $.fn.smint.defaults, options),
+			$smintItems = $smint.find('a').not(settings.ignoreItemsSelector),
 			// Set the variables needed
 			optionLocs = [],
 			lastScrollTop = 0,
-			lastHash = '',
 			menuHeight = $smint.height(),
 			curi = 0,
 			stickyTop = $smint.offset().top,
@@ -54,7 +53,6 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 			}else{
 				$smint.removeClass(settings.menuStikyClass);
 			}
-
 			if (!scrollingDown) {
 				while (true) {
 					if (scrollTop >= optionLocs[curi].top) {
@@ -104,7 +102,7 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 				$(this).scrollTop($(window.location.hash).position().top - menuHeight);
 			}
 		});
-
+		
 		$smintItems.first().addClass(settings.menuActiveItemClass);
 
 		// This function assumes that the elements are already in a sorted manner.
@@ -112,7 +110,7 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 			var $this = $(this);
 			
 			// No need to even add to optionLocs
-			if ($(this).is(settings.ignoreAllItemsSelector)) {
+			if ($(this).filter(settings.ignoreAllItemsSelector).length) {
 				return;
 			}
 			
@@ -127,20 +125,14 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 			if(href.indexOf('#') >= 0) {
 				hash = href.substr(href.indexOf('#') + 1);
 			}
-			
-			optionLocs.push({
+			var item = {
 				top: sectionTop - menuHeight,
 				bottom: parseInt(matchingSection.height()) + sectionTop - menuHeight, //Added so that if he is scrolling down and has reached 90% of the section.
 				$item: $this,
 				hash: hash
-			});
-
-			// if the link has the smint-disable class it will be ignored 
-			// Courtesy of mcpacosy(@mcpacosy)
-			// No need to add listener if this is the case.
-			if ($(this).is(settings.ignoreItemsSelector)) {
-				return;
 			}
+			
+			optionLocs.push(item);
 			
 			$smintSections = $smintSections.add($(this).attr('href'));
 
@@ -148,7 +140,7 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 				// stops empty hrefs making the page jump when clicked
 				// Added after the check of smint-disableAll so that if its an external href it will work.
 				e.preventDefault();
-				if ($(this).is('.' + settings.menuActiveItemClass)){
+				if ($(this).filter('.' + settings.menuActiveItemClass).length){
 					return;
 				}
 				// Scroll the page to the desired position!
@@ -162,6 +154,8 @@ If you like Smint, or have suggestions on how it could be improved, send me a tw
 				.filter('a[href=' + window.location.hash + ']')
 				.click();
 		}
+		
+		this.data('smint-optionLocs', optionLocs);
 		
 	}
 
